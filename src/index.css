@@ -1,0 +1,96 @@
+@import 'maplibre-gl/dist/maplibre-gl.css';
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MapLibre GL Custom Marker & Popup Enhancements */
+.maplibregl-popup-content {
+  padding: 0;
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.2), 0 8px 10px -6px rgba(15, 23, 42, 0.12);
+  overflow: hidden;
+  background: transparent;
+  border: none;
+}
+.maplibregl-popup-close-button {
+  display: none;
+}
+.maplibregl-popup-anchor-top .maplibregl-popup-tip {
+  border-bottom-color: #0F172A;
+}
+.maplibregl-popup-anchor-bottom .maplibregl-popup-tip {
+  border-top-color: #0F172A;
+}
+.maplibregl-canvas {
+  outline: none;
+}
+
+/* Leaflet Custom Marker & Popup Enhancements (retained for backward safety) */
+.leaflet-popup-content-wrapper {
+  padding: 0;
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 25px -5px rgba(15, 23, 42, 0.15), 0 8px 10px -6px rgba(15, 23, 42, 0.1);
+  overflow: hidden;
+  background: transparent;
+}
+.leaflet-popup-content {
+  margin: 0;
+  line-height: inherit;
+}
+.leaflet-container {
+  font-family: inherit;
+}
+.custom-div-icon {
+  background: transparent;
+  border: none;
+}
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading;
+  }
+}
+
+/* Custom smooth scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
+}
+
+/* Subtle pulse animation for occupancy radar */
+@keyframes radarPulse {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.radar-beacon {
+  animation: radarPulse 2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+}
