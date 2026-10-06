@@ -2,7 +2,7 @@
 export type Coordinates = { lat: number; lon: number };
 export type ParkingListing = { id: string; name: string; location: Coordinates; source: string; amenities: string[] };
 export type BayState = 'Available' | 'Occupied' | 'Uncertain' | 'Stale';
-export type BayObservation = { facilityBayId: string; state: BayState; observedAt: string; sourceCameraIds: string[] };
+export type BayObservation = { facilityBayId: string; state: BayState; observedAt: string; sourceDeviceIds: string[]; vehicleLabel?: string | null };
 
 export interface GeocodingProvider {
   search(query: string): Promise<{ label: string; location: Coordinates } | null>;
@@ -14,7 +14,7 @@ export interface ParkingSearchProvider<T = ParkingListing> {
 export interface RoutingProvider {
   directions(from: Coordinates, to: Coordinates, mode: 'driving' | 'walking' | 'cycling'): Promise<{ url: string } | null>;
 }
-export interface CameraProcessingProvider {
+export interface SensorOccupancyProvider {
   observations(facilityId: string): Promise<BayObservation[]>;
 }
 export interface ReservationProvider {
@@ -31,7 +31,7 @@ export interface ParkingAssistantProvider {
 export const integrationReadiness = {
   maps: 'configured-by-public-development-provider',
   routing: 'setup-required',
-  cameraProcessing: 'setup-required',
+  sensorGateway: 'setup-required',
   reservations: 'setup-required',
   sms: 'setup-required',
   assistant: 'setup-required',

@@ -1,5 +1,5 @@
 export type CopilotAction = 'activity' | 'extend' | 'predictions' | 'ev' | 'airport' | 'booking' | 'history';
-export type CopilotContext = { location: string; available: number; capacity: number; vehicle: string; ev: boolean; accessible: boolean; activeParking: boolean; savedSessions: number; mappedPlaces: number };
+export type CopilotContext = { location: string; available: number; capacity: number; vehicle: string; ev: boolean; accessible: boolean; activeParking: boolean; savedSessions: number; mappedPlaces: number; sensorSummary?: { mode: 'demo'|'live'; available: number; occupied: number; total: number; connected: boolean } };
 export function answerParkingQuestion(question: string, context: CopilotContext): { text: string; action?: CopilotAction } {
   const q=question.trim().toLowerCase();
   if(/find my car|locate my car|where.*parked|find.*vehicle/.test(q)) return context.activeParking
@@ -13,7 +13,11 @@ export function answerParkingQuestion(question: string, context: CopilotContext)
   if(/airport/.test(q)) return {text:'I can search the Puducherry Airport area. The search returns mapped parking listings and does not verify long-term access or availability.',action:'airport'};
   if(/history|previous|past parking|last park/.test(q)) return {text:`There are ${context.savedSessions} saved parking session${context.savedSessions===1?'':'s'} on this device. Open My parking to review completed sessions.`,action:'history'};
   if(/book|reserv|ticket|payment/.test(q)) return {text:'The Pondicherry lot has a preview-only sample ticket. It does not hold a bay or take payment. Use the demo booking control on the lot card.',action:'booking'};
-  if(/occup|space|bay|free|avail|accuracy|accur|live/.test(q)) return {text:`The White Town demo currently shows ${context.available} of ${context.capacity} spaces available. This is simulated; no camera is connected and accuracy has not been measured. Mapped listings do not report live occupancy.`,action:'predictions'};
+  if(/occup|space|bay|free|avail|accuracy|accur|live|sensor|rfid|tag/.test(q)) {
+    const sensors=context.sensorSummary;
+    if(sensors?.total) return {text:`${sensors.mode==='demo'?'The simulated RFID demo':'The connected IoT feed'} reports ${sensors.available} empty and ${sensors.occupied} occupied of ${sensors.total} monitored bays${sensors.connected?'':' · gateway disconnected'}. The reading is occupancy only; it does not confirm a reservation.`,action:'predictions'};
+    return {text:'No IoT bay readings are currently available. Mapped OpenStreetMap listings provide locations, not live occupancy. Select Demo to view sample sensors or connect the ESP32 gateway for hardware readings.',action:'predictions'};
+  }
   if(/vehicle|car|suv|two.?wheel|accessible/.test(q)) return {text:`Your current demo vehicle is ${context.vehicle}${context.ev?', with EV charging requested':''}${context.accessible?', with accessible parking requested':''}. Change these needs from the vehicle profile button.`,action:'predictions'};
   return {text:`I can help with finding your parked car, extending a timer, cheap parking, EV charging, airport parking, parking history, and the White Town demo. This assistant uses keyword rules and app data; it does not call an LLM.`,action:'activity'};
 }
