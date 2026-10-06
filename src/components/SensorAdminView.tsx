@@ -7,6 +7,7 @@ type Props = { onBack: () => void; onSignOut: () => void; mode: SensorMode; conn
 const formatTime = (value: string) => Number.isNaN(Date.parse(value)) ? 'Time unavailable' : new Date(value).toLocaleString([], { dateStyle: 'medium', timeStyle: 'medium' });
 
 export function SensorAdminView({ onBack, onSignOut, mode, connection, bays, facilityId }: Props) {
+  const publicPreview = !import.meta.env.VITE_IOT_API_URL?.trim() && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1';
   const [configuredFacility, setConfiguredFacility] = useState(facilityId);
   const [deviceName, setDeviceName] = useState('esp32-demo-01');
   const [readerBays, setReaderBays] = useState(['A1', 'A2', 'A3', 'A4', 'A5']);
@@ -31,10 +32,10 @@ export function SensorAdminView({ onBack, onSignOut, mode, connection, bays, fac
   return <main className="admin-page sensor-admin-page">
     <div className="admin-toolbar">
       <div><div className="eyebrow">PARKPREDICT · OPERATOR CONSOLE</div><h1>Sensor setup</h1><p>Manage the demo gateway and review its five monitored bays.</p></div>
-      <div className="sensor-admin-toolbar-actions"><span className="operator-session-badge"><ShieldCheck size={14}/> Technician session</span><button className="back-button" onClick={onBack}><ArrowLeft size={15}/> Back to parking</button><button className="back-button operator-logout" onClick={onSignOut}>Sign out</button></div>
+      <div className="sensor-admin-toolbar-actions"><span className="operator-session-badge"><ShieldCheck size={14}/> {publicPreview ? 'Demo admin preview' : 'Technician session'}</span><button className="back-button" onClick={onBack}><ArrowLeft size={15}/> Back to parking</button><button className="back-button operator-logout" onClick={onSignOut}>{publicPreview ? 'Exit preview' : 'Sign out'}</button></div>
     </div>
 
-    <div className="sensor-admin-notice"><ShieldCheck size={19}/><div><b>Technician-only configuration</b><p>Driver accounts can view bay readings but cannot open this setup screen. RFID tag IDs identify occupancy; they are not sign-in or booking credentials.</p></div></div>
+    <div className="sensor-admin-notice"><ShieldCheck size={19}/><div><b>{publicPreview ? 'Public demonstration mode' : 'Technician-only configuration'}</b><p>{publicPreview ? 'This console is an interactive preview. Values stay in this browser and cannot register devices, change Wi-Fi, or update gateway secrets.' : 'Driver accounts can view bay readings but cannot open this setup screen. RFID tag IDs identify occupancy; they are not sign-in or booking credentials.'}</p></div></div>
 
     <div className="sensor-admin-grid">
       <form className="sensor-admin-card sensor-config-form" onSubmit={submitPreview}>
