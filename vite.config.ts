@@ -5,4 +5,11 @@ export default defineConfig({
   // GitHub Pages serves this repository under /ParkPredict/; keep local Vite at /.
   base: process.env.GITHUB_ACTIONS === 'true' ? '/ParkPredict/' : '/',
   plugins: [react()],
+  build: {
+    rollupOptions: {
+      output: {
+        entryFileNames: 'assets/[name]-[hash]-admin-preview.js',
+      },
+    },
+  },
 });
