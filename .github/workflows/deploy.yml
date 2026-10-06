@@ -33,6 +33,11 @@ jobs:
         run: npm run build
         env:
           GITHUB_ACTIONS: 'true'
+          VITE_IOT_API_URL: ${{ vars.VITE_IOT_API_URL }}
+          VITE_IOT_WS_URL: ${{ vars.VITE_IOT_WS_URL }}
+          VITE_IOT_FACILITY_ID: ${{ vars.VITE_IOT_FACILITY_ID }}
+          VITE_SUPABASE_URL: ${{ vars.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY: ${{ vars.VITE_SUPABASE_ANON_KEY }}
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
