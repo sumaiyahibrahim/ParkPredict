@@ -1,33 +1,62 @@
 import { useEffect, useMemo, useState } from 'react';
+import { SENSOR_BAYS, SENSOR_FACILITY_ID } from './config';
 import { SensorConnectionManager } from './sensorConnectionManager';
 import { markStaleBays } from './occupancyStateManager';
-import type { BayState, SensorBay, SensorFeedState, SensorMode } from './types';
+import type { SensorBay, SensorFeedState, SensorMode } from './types';
 
-const facilityId = import.meta.env.VITE_IOT_FACILITY_ID || 'demo:white-town';
+const demoDistances: Record<string, number> = { A1: 20, A2: 7, A3: 21, A4: 6 };
+
 function makeDemoBays(): SensorBay[] {
   const now = new Date().toISOString();
-  return Array.from({ length: 5 }, (_, index) => {
-    const occupied = index === 1 || index === 4;
-    return { facilityId, deviceId: 'demo-esp32', bayId: `A${index + 1}`, state: occupied ? 'Occupied' : 'Available', observedAt: now, vehicleLabel: occupied ? `Toy Car 0${index === 1 ? 1 : 2}` : null, sensorReady: true, deviceOnline: true };
-  });
+  return SENSOR_BAYS.map((config) => ({
+    facilityId: SENSOR_FACILITY_ID,
+    deviceId: 'demo-esp32',
+    sensorId: config.sensorId,
+    bayId: config.bayId,
+    state: config.bayId === 'A2' || config.bayId === 'A4' ? 'Occupied' : 'Available',
+    observedAt: now,
+    sensorReady: true,
+    deviceOnline: true,
+    distanceCm: demoDistances[config.bayId],
+  }));
 }
 
 export function useSensorFeed() {
   const [mode, setModeState] = useState<SensorMode>(() => {
-    try { return localStorage.getItem('parkpredict_sensor_mode') === 'live' ? 'live' : 'demo'; } catch { return 'demo'; }
+    try {
+      return localStorage.getItem('parkpredict_sensor_mode') === 'live' ? 'live' : 'demo';
+    } catch {
+      return 'demo';
+    }
   });
-  const [state, setState] = useState<SensorFeedState>(() => ({ mode: 'demo', connection: 'demo', bays: makeDemoBays() }));
-  const [tick, setTick] = useState(0);
-  const setMode = (next: SensorMode) => { setModeState(next); try { localStorage.setItem('parkpredict_sensor_mode', next); } catch { /* Preference is optional. */ } };
+  const [state, setState] = useState<SensorFeedState>(() => ({
+    mode: 'demo',
+    connection: 'demo',
+    bays: makeDemoBays(),
+  }));
+  const [freshnessTick, setFreshnessTick] = useState(0);
+  const setMode = (next: SensorMode) => {
+    setModeState(next);
+    try {
+      localStorage.setItem('parkpredict_sensor_mode', next);
+    } catch {
+      /* Preference is optional. */
+    }
+  };
 
   useEffect(() => {
-    const freshnessTimer = window.setInterval(() => setTick(value => value + 1), 2000);
-    return () => window.clearInterval(freshnessTimer);
+    const timer = window.setInterval(() => setFreshnessTick((value) => value + 1), 2_000);
+    return () => window.clearInterval(timer);
   }, []);
 
   useEffect(() => {
     if (mode === 'demo') {
-      setState({ mode, connection: 'demo', bays: makeDemoBays() });
+      setState({
+        mode,
+        connection: 'demo',
+        bays: makeDemoBays(),
+        message: 'Simulated ultrasonic feed',
+      });
       return;
     }
     const manager = new SensorConnectionManager(setState);
@@ -35,16 +64,16 @@ export function useSensorFeed() {
     return () => manager.stop();
   }, [mode]);
 
-  const demoBays = useMemo(() => {
-    if (mode !== 'demo') return state.bays;
-    const states = ['Available', 'Occupied', 'Available', 'Available', 'Occupied'] as const;
-    const movingIndex = Math.floor(tick / 2) % states.length;
-    return state.bays.map((bay, index) => {
-      const occupied = index === 1 || index === 4 || (index === movingIndex && tick % 2 === 1);
-      const state: BayState = occupied ? 'Occupied' : 'Available';
-      return { ...bay, state, vehicleLabel: occupied ? `Toy Car 0${index === 4 ? 2 : 1}` : null, observedAt: new Date().toISOString() };
-    });
-  }, [mode, state.bays, tick]);
-  const bays = useMemo(() => markStaleBays(mode === 'demo' ? demoBays : state.bays), [mode, demoBays, state.bays, tick]);
-  return { mode, setMode, connection: mode === 'demo' ? 'demo' : state.connection, bays, facilityId } as const;
+  const bays = useMemo(
+    () => (mode === 'demo' ? state.bays : markStaleBays(state.bays)),
+    [mode, state.bays, freshnessTick],
+  );
+
+  return {
+    mode,
+    setMode,
+    connection: mode === 'demo' ? 'demo' : state.connection,
+    bays,
+    facilityId: SENSOR_FACILITY_ID,
+  } as const;
 }

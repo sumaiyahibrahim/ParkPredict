@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900" role="img" aria-labelledby="title desc">
+  <title id="title">ParkPredict four bay ultrasonic architecture</title>
+  <desc id="desc">Four ultrasonic bay sensors connect to an ESP32, which sends authenticated messages to FastAPI. React shows read-only driver status and protected administrator calibration.</desc>
+  <defs>
+    <style>
+      .title{font:700 34px Arial,sans-serif;fill:#153b33}.subtitle{font:16px Arial,sans-serif;fill:#61736d}.section{font:700 13px Arial,sans-serif;fill:#14715f;letter-spacing:1.4px}.cardTitle{font:700 18px Arial,sans-serif;fill:#173b34}.body{font:14px Arial,sans-serif;fill:#536760}.small{font:12px Arial,sans-serif;fill:#71827c}.line{fill:none;stroke:#277b68;stroke-width:3;marker-end:url(#arrow)}.dash{fill:none;stroke:#8b9a96;stroke-width:2;stroke-dasharray:7 7;marker-end:url(#arrowGrey)}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#277b68"/></marker>
+    <marker id="arrowGrey" markerWidth="10" markerHeight="10" refX="9" refY="5" orient="auto"><path d="M0 0L10 5L0 10Z" fill="#8b9a96"/></marker>
+    <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#173b34" flood-opacity=".10"/></filter>
+  </defs>
+  <rect width="1600" height="900" fill="#f5f8f7"/>
+  <text x="70" y="68" class="title">ParkPredict · Four Bay Ultrasonic System</text>
+  <text x="70" y="98" class="subtitle">Physical presence → authenticated gateway → safe availability → driver and technician views</text>
+
+  <text x="70" y="150" class="section">PARKING MODEL</text>
+  <rect x="70" y="170" width="430" height="300" rx="22" fill="#fff" stroke="#dbe7e3" filter="url(#shadow)"/>
+  <text x="100" y="210" class="cardTitle">Four independent parking bays</text>
+  <text x="100" y="236" class="body">One HC-SR04 measures each marked bay.</text>
+  <g transform="translate(100 270)">
+    <rect width="175" height="70" rx="12" fill="#e9f6f1" stroke="#acd7c8"/><text x="20" y="30" class="cardTitle">A1 · Available</text><text x="20" y="52" class="small">ultrasonic-a1 · 20 cm</text>
+    <rect x="195" width="175" height="70" rx="12" fill="#fff4e8" stroke="#e7c38e"/><text x="215" y="30" class="cardTitle">A2 · Occupied</text><text x="215" y="52" class="small">ultrasonic-a2 · 7 cm</text>
+    <rect y="90" width="175" height="70" rx="12" fill="#e9f6f1" stroke="#acd7c8"/><text x="20" y="120" class="cardTitle">A3 · Available</text><text x="20" y="142" class="small">ultrasonic-a3 · 21 cm</text>
+    <rect x="195" y="90" width="175" height="70" rx="12" fill="#fff4e8" stroke="#e7c38e"/><text x="215" y="120" class="cardTitle">A4 · Occupied</text><text x="215" y="142" class="small">ultrasonic-a4 · 6 cm</text>
+  </g>
+  <text x="100" y="448" class="small">Echo passes through a 1 kΩ / 2 kΩ divider to protect 3.3 V ESP32 inputs.</text>
+
+  <text x="585" y="150" class="section">EDGE PROCESSING</text>
+  <rect x="585" y="170" width="340" height="300" rx="22" fill="#fff" stroke="#dbe7e3" filter="url(#shadow)"/>
+  <circle cx="755" cy="236" r="42" fill="#e4f3ee"/><text x="755" y="243" text-anchor="middle" class="cardTitle">ESP32</text>
+  <text x="625" y="310" class="body">1. Trigger sensors sequentially</text>
+  <text x="625" y="340" class="body">2. Reject timeouts and invalid ranges</text>
+  <text x="625" y="370" class="body">3. Median filter five samples</text>
+  <text x="625" y="400" class="body">4. Apply hysteresis and debounce</text>
+  <text x="625" y="430" class="body">5. Send readings and heartbeats</text>
+
+  <text x="1010" y="150" class="section">TRUSTED BACKEND</text>
+  <rect x="1010" y="170" width="500" height="300" rx="22" fill="#173f35" filter="url(#shadow)"/>
+  <text x="1050" y="215" style="font:700 20px Arial,sans-serif;fill:#fff">FastAPI IoT gateway</text>
+  <text x="1050" y="250" style="font:14px Arial,sans-serif;fill:#cfe2db">Device token authentication · /ws/device</text>
+  <text x="1050" y="285" style="font:14px Arial,sans-serif;fill:#cfe2db">Message, sensor ID, bay, and distance validation</text>
+  <text x="1050" y="320" style="font:14px Arial,sans-serif;fill:#cfe2db">Per-bay calibration and authoritative state</text>
+  <text x="1050" y="355" style="font:14px Arial,sans-serif;fill:#cfe2db">Trusted server time and stale detection</text>
+  <text x="1050" y="390" style="font:14px Arial,sans-serif;fill:#cfe2db">Latest occupancy store · browser broadcast /ws/live</text>
+  <rect x="1050" y="415" width="390" height="32" rx="8" fill="#285b4d"/><text x="1070" y="436" style="font:12px Arial,sans-serif;fill:#dcebe6">Invalid, uncertain, offline, or stale ≠ Available</text>
+
+  <path d="M500 320H585" class="line"/>
+  <path d="M925 320H1010" class="line"/>
+  <text x="510" y="302" class="small">Echo pulses</text>
+  <text x="935" y="302" class="small">Authenticated WebSocket</text>
+
+  <text x="70" y="545" class="section">PRODUCT EXPERIENCE</text>
+  <rect x="70" y="565" width="690" height="245" rx="22" fill="#fff" stroke="#dbe7e3" filter="url(#shadow)"/>
+  <text x="110" y="610" class="cardTitle">Driver · read-only</text>
+  <text x="110" y="646" class="body">Search destination and mapped parking</text>
+  <text x="110" y="676" class="body">See A1–A4 state, distance, freshness, and connection</text>
+  <text x="110" y="706" class="body">Select only fresh sensor-ready Available bays</text>
+  <text x="110" y="736" class="body">Physical state stays separate from reservation state</text>
+  <text x="110" y="776" class="small">Map locations: OpenStreetMap · live occupancy: connected ParkPredict facility only</text>
+
+  <rect x="840" y="565" width="670" height="245" rx="22" fill="#fff" stroke="#dbe7e3" filter="url(#shadow)"/>
+  <text x="880" y="610" class="cardTitle">Parking Admin · protected</text>
+  <text x="880" y="646" class="body">Monitor ESP32 connection and 4/4 reporting</text>
+  <text x="880" y="676" class="body">Review sensor-to-bay mapping and live distances</text>
+  <text x="880" y="706" class="body">Capture empty baseline and save calibration</text>
+  <text x="880" y="736" class="body">Credentials verified by FastAPI; eight-hour session</text>
+  <text x="880" y="776" class="small">Wi-Fi passwords and device tokens never enter the website.</text>
+
+  <path d="M1230 470V520H415V565" class="line"/>
+  <path d="M1280 470V535H1175V565" class="line"/>
+  <text x="790" y="513" class="small">Live snapshot and updates</text>
+  <path d="M1175 565V530H1370V470" class="dash"/>
+  <text x="1190" y="525" class="small">Protected calibration API</text>
+  <text x="70" y="865" class="small">Demo capacity is configured from A1–A4. Future forecasts are heuristic and are shown separately from current sensor occupancy.</text>
+</svg>

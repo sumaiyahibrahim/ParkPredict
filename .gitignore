@@ -13,5 +13,6 @@ outputs/
 .env
 .env.*.local
 backend/.env
-firmware/parkpredict_rfid/secrets.h
+firmware/parkpredict_ultrasonic/secrets.h
+backend/data/sensor_config.json
 *.tsbuildinfo

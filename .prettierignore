@@ -1,0 +1,5 @@
+dist
+node_modules
+backend/.venv
+backend/data
+firmware/parkpredict_ultrasonic/secrets.h

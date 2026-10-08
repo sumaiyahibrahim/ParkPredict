@@ -36,6 +36,15 @@ class ConnectionManager:
         async with self.lock:
             return device_id in self.devices
 
+    async def broadcast_devices(self, payload: dict) -> None:
+        async with self.lock:
+            clients = tuple(self.devices.values())
+        for client in clients:
+            try:
+                await client.send_json(payload)
+            except Exception:
+                # The device socket lifecycle removes failed clients.
+                pass
     async def broadcast(self, payload: dict) -> None:
         async with self.lock:
             clients = tuple(self.browsers)

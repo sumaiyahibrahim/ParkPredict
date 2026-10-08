@@ -12,6 +12,9 @@ class OccupancyStore:
     def update(self, observation: dict[str, Any]) -> None:
         self.latest[(observation["facilityId"], observation["bayId"])] = observation
 
+    def get(self, facility_id: str, bay_id: str) -> dict[str, Any] | None:
+        return self.latest.get((facility_id, bay_id))
+
     def rows(self, facility_id: str | None = None) -> list[dict[str, Any]]:
         rows = [row for row in self.latest.values() if not facility_id or row["facilityId"] == facility_id]
         return sorted(rows, key=lambda row: (row["facilityId"], row["bayId"]))

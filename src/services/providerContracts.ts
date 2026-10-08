@@ -1,8 +1,21 @@
 /** Service boundaries for integrations that must remain replaceable and server-owned. */
 export type Coordinates = { lat: number; lon: number };
-export type ParkingListing = { id: string; name: string; location: Coordinates; source: string; amenities: string[] };
+export type ParkingListing = {
+  id: string;
+  name: string;
+  location: Coordinates;
+  source: string;
+  amenities: string[];
+};
 export type BayState = 'Available' | 'Occupied' | 'Uncertain' | 'Stale';
-export type BayObservation = { facilityBayId: string; state: BayState; observedAt: string; sourceDeviceIds: string[]; vehicleLabel?: string | null };
+export type BayObservation = {
+  facilityBayId: string;
+  sensorId: string;
+  state: BayState;
+  observedAt: string;
+  sourceDeviceIds: string[];
+  distanceCm: number | null;
+};
 
 export interface GeocodingProvider {
   search(query: string): Promise<{ label: string; location: Coordinates } | null>;
@@ -12,19 +25,37 @@ export interface ParkingSearchProvider<T = ParkingListing> {
   nearby(location: Coordinates, radiusKm: number): Promise<{ places: T[]; retrievedAt: Date }>;
 }
 export interface RoutingProvider {
-  directions(from: Coordinates, to: Coordinates, mode: 'driving' | 'walking' | 'cycling'): Promise<{ url: string } | null>;
+  directions(
+    from: Coordinates,
+    to: Coordinates,
+    mode: 'driving' | 'walking' | 'cycling',
+  ): Promise<{ url: string } | null>;
 }
 export interface SensorOccupancyProvider {
   observations(facilityId: string): Promise<BayObservation[]>;
 }
 export interface ReservationProvider {
-  reserve(input: { facilityId: string; bayId: string; startUtc: string; endUtc: string; idempotencyKey: string }): Promise<{ reference: string; confirmed: boolean }>;
+  reserve(input: {
+    facilityId: string;
+    bayId: string;
+    startUtc: string;
+    endUtc: string;
+    idempotencyKey: string;
+  }): Promise<{ reference: string; confirmed: boolean }>;
 }
 export interface SmsProvider {
-  send(input: { phone: string; template: 'booking-confirmed' | 'ending-soon' | 'booking-changed'; bookingId: string }): Promise<{ accepted: boolean; providerMessageId?: string }>;
+  send(input: {
+    phone: string;
+    template: 'booking-confirmed' | 'ending-soon' | 'booking-changed';
+    bookingId: string;
+  }): Promise<{ accepted: boolean; providerMessageId?: string }>;
 }
 export interface ParkingAssistantProvider {
-  answer(input: { question: string; currentLocation?: Coordinates; currentFacilityId?: string }): Promise<{ answer: string; sourceIds: string[]; observedAt?: string }>;
+  answer(input: {
+    question: string;
+    currentLocation?: Coordinates;
+    currentFacilityId?: string;
+  }): Promise<{ answer: string; sourceIds: string[]; observedAt?: string }>;
 }
 
 /** True integrations require server implementations; browser-only stubs never claim success. */

@@ -1,38 +1,140 @@
-import { Activity, CarFront, CircleAlert, Radio, Wifi, WifiOff } from 'lucide-react';
-import { displayRfidVehicle } from '../services/iot/rfidTagIdentification';
+import { CircleAlert, Radio } from 'lucide-react';
+import { SENSOR_BAY_COUNT } from '../services/iot/config';
+import type { BayOperation } from '../services/bookingOperations';
 import type { SensorBay, SensorConnection, SensorMode } from '../services/iot/types';
 
-type Props = { mode: SensorMode; onModeChange: (mode: SensorMode) => void; connection: SensorConnection; bays: SensorBay[]; facilityId: string };
-const time = (value: string) => new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+type Props = {
+  mode: SensorMode;
+  onModeChange: (mode: SensorMode) => void;
+  connection: SensorConnection;
+  bays: SensorBay[];
+  facilityId: string;
+  operations?: BayOperation[];
+};
+const time = (value: string) =>
+  new Date(value).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
 
-export function SensorDashboard({ mode, onModeChange, connection, bays, facilityId }: Props) {
-  const visible = bays.filter(bay => bay.facilityId === facilityId);
-  const occupied = visible.filter(bay => bay.state === 'Occupied').length;
-  const available = visible.filter(bay => bay.state === 'Available').length;
-  const known = visible.filter(bay => bay.state === 'Available' || bay.state === 'Occupied').length;
-  const unknown = Math.max(0, 5 - known);
-  const connected = connection === 'connected' || connection === 'demo';
-  return <section className="sensor-dashboard" aria-label="IoT parking sensor status">
-    <div className="sensor-dashboard-top">
-      <div className="sensor-title"><span className="sensor-icon"><Radio size={15}/></span><div><b>RFID bay readers</b><small>{mode === 'demo' ? 'Simulated RFID demo' : 'ESP32 live connection'}</small></div></div>
-      <div className="sensor-mode-switch" role="group" aria-label="Sensor data mode">
-        <button type="button" className={mode === 'demo' ? 'selected' : ''} onClick={() => onModeChange('demo')}>Demo</button>
-        <button type="button" className={mode === 'live' ? 'selected' : ''} onClick={() => onModeChange('live')}>Live</button>
+export function SensorDashboard({
+  mode,
+  onModeChange,
+  connection,
+  bays,
+  facilityId,
+  operations = [],
+}: Props) {
+  const visible = bays.filter((bay) => bay.facilityId === facilityId);
+  const unavailableBayIds = new Set(operations.map((item) => item.bayId));
+  const occupied = visible.filter(
+    (bay) => bay.state === 'Occupied' && !unavailableBayIds.has(bay.bayId),
+  ).length;
+  const available = visible.filter(
+    (bay) => bay.state === 'Available' && !unavailableBayIds.has(bay.bayId),
+  ).length;
+  const reporting = visible.filter(
+    (bay) =>
+      bay.sensorReady &&
+      bay.deviceOnline &&
+      (bay.state === 'Available' || bay.state === 'Occupied'),
+  ).length;
+  const unavailable = visible.filter(
+    (bay) => bay.state === 'Uncertain' || bay.state === 'Stale',
+  ).length;
+  const latest = visible.reduce<string | null>(
+    (value, bay) =>
+      !value || Date.parse(bay.observedAt) > Date.parse(value) ? bay.observedAt : value,
+    null,
+  );
+  const sourceLabel =
+    mode === 'demo'
+      ? 'Demo data'
+      : connection === 'connected'
+        ? 'Live data'
+        : connection === 'connecting'
+          ? 'Connecting'
+          : 'Offline';
+
+  return (
+    <section className="sensor-dashboard" aria-label="Parking bay availability">
+      <div className="sensor-dashboard-top">
+        <div className="sensor-title">
+          <span className="sensor-icon">
+            <Radio size={16} />
+          </span>
+          <div>
+            <b>Live bay status</b>
+            <small>
+              {sourceLabel}
+              {latest ? ` · Updated ${time(latest)}` : ''}
+            </small>
+          </div>
+        </div>
+        <div className="sensor-mode-switch" role="group" aria-label="Availability data source">
+          <button
+            type="button"
+            className={mode === 'demo' ? 'selected' : ''}
+            onClick={() => onModeChange('demo')}
+          >
+            Demo
+          </button>
+          <button
+            type="button"
+            className={mode === 'live' ? 'selected' : ''}
+            onClick={() => onModeChange('live')}
+          >
+            Live
+          </button>
+        </div>
       </div>
-    </div>
-    <div className={`sensor-connection ${connected ? 'online' : 'offline'}`}>
-      {connected ? <Wifi size={13}/> : <WifiOff size={13}/>}
-      <span>{mode === 'demo' ? 'Sample readings · not hardware' : connection === 'connected' ? 'Gateway connected' : connection === 'connecting' ? 'Connecting to IoT gateway…' : 'Gateway unavailable · retrying'}</span>
-      {visible.length > 0 && <b>{known}/5 reporting · {available} empty · {occupied} occupied{unknown ? ` · ${unknown} unknown` : ''}</b>}
-    </div>
-    {mode === 'live' && visible.length === 0 ? <div className="sensor-empty-state"><CircleAlert size={14}/><span>No readings for this facility. Start the gateway and ESP32; live status stays unknown until data arrives.</span></div> :
-      <div className="sensor-bay-grid">{visible.map(bay => <div className={`sensor-bay ${bay.state.toLowerCase()}`} key={`${bay.facilityId}:${bay.bayId}`}>
-        <span className="sensor-bay-dot"/><b>{bay.bayId}</b><span>{bay.state === 'Available' ? 'Empty' : bay.state}</span>
-        {bay.vehicleLabel ? <small><CarFront size={11}/>{displayRfidVehicle(bay.vehicleLabel)}</small> : bay.state === 'Occupied' ? <small>Vehicle not identified</small> : null}
-        <small className="sensor-bay-device" title={bay.deviceId}>{bay.deviceId}</small>
-        <small className="sensor-bay-time"><Activity size={10}/>{time(bay.observedAt)}</small>
-      </div>)}</div>}
 
-    {mode === 'live' && <p className="sensor-disclaimer">Only tag IDs added to the gateway allowlist receive a vehicle label; RFID is not a booking credential.</p>}
-  </section>;
+      <div className="sensor-summary">
+        <div className="sensor-summary-primary">
+          <strong>{available}</strong>
+          <span>available</span>
+        </div>
+        <div className="sensor-summary-stats">
+          <span>
+            <b>{occupied}</b> occupied
+          </span>
+          <span>
+            <b>
+              {reporting}/{SENSOR_BAY_COUNT}
+            </b>{' '}
+            reporting
+          </span>
+          {unavailable > 0 && (
+            <span>
+              <b>{unavailable}</b> unavailable
+            </span>
+          )}
+        </div>
+      </div>
+
+      {mode === 'live' && visible.length === 0 ? (
+        <div className="sensor-empty-state">
+          <CircleAlert size={16} />
+          <span>No live readings yet. Bays remain unavailable until the ESP32 reports.</span>
+        </div>
+      ) : (
+        <div className="sensor-bay-grid">
+          {visible.map((bay) => {
+            const operation = operations.find((item) => item.bayId === bay.bayId);
+            const displayState = operation?.state || bay.state;
+            return (
+              <div
+                className={`sensor-bay ${displayState.toLowerCase()}`}
+                key={`${bay.facilityId}:${bay.bayId}`}
+                title={operation ? `${operation.state} · ${operation.bookingReference}` : undefined}
+              >
+                <div className="sensor-bay-name">
+                  <b>{bay.bayId}</b>
+                  <span className="sensor-bay-dot" />
+                </div>
+                <strong>{displayState === 'Available' ? 'Free' : displayState}</strong>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
+  );
 }
